@@ -157,7 +157,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-    app.run_server(debug=args.debug, port=args.port)
+    # app.run_server(debug=args.debug, port=args.port)
+    app.run_server(debug=True, port=args.port)
 
 
 if __name__ == "__main__":
