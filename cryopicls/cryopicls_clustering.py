@@ -59,14 +59,11 @@ def main():
     # Save metadatas and model
     os.makedirs(args.output_dir, exist_ok=True)
     # The best model
-    with open(
-            os.path.join(args.output_dir,
-                         f'{args.output_file_rootname}_model.pkl'), 'wb') as f:
+    with open(os.path.join(args.output_dir, f'{args.output_file_rootname}_model.pkl'), 'wb') as f:
         pickle.dump(fitted_model, f, protocol=4)
     # Cluster centers
     np.savetxt(
-        os.path.join(args.output_dir,
-                     f'{args.output_file_rootname}_cluster_centers.txt'),
+        os.path.join(args.output_dir, f'{args.output_file_rootname}_cluster_centers.txt'),
         cluster_centers)
     # Coordinates in Z nearest to the cluster centers
     label_list = np.unique(cluster_labels)
@@ -94,7 +91,7 @@ def main():
                          f'{args.output_file_rootname}_cluster{label:03d}_Z'),
             Z_cluster)
 
-    # Save Z and cluster_labels as dataframe
+    # Save Z and cluster_labels as dataframe (input for cryopicls_visualizer)
     col_names = [f'dim_{x}' for x in range(1, Z.shape[1] + 1)]
     df = pd.concat([
         pd.DataFrame(data=Z, columns=col_names),
