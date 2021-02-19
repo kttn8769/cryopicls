@@ -12,7 +12,15 @@ import dash_html_components as html
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
 
+templates = [
+    {'label': x, 'value': x}
+    for x in
+    ['ggplot2', 'seaborn', 'simple_white', 'plotly', 'plotly_white', 'plotly_dark',
+     'presentation', 'xgridoff', 'ygridoff', 'gridon', 'none']]
+
 df = pd.DataFrame()
+df_mins = pd.Series(dtype='float64')
+df_maxs = pd.Series(dtype='float64')
 clustering_result_file = None
 projection_result_file = None
 
@@ -50,6 +58,12 @@ def get_color(color_by_cluster):
     else:
         color = None
     return color
+
+
+def get_range(axis, margin=0.5):
+    vmin = df_mins[axis] - margin
+    vmax = df_maxs[axis] + margin
+    return [vmin, vmax]
 
 
 def get_file_info():
@@ -92,6 +106,24 @@ def create_container_scatter_3d():
                             options=options,
                             value=options[2]['value']
                         ),
+                        html.H6('Plot theme:'),
+                        dcc.Dropdown(
+                            id='container-scatter-3d-dropdown-theme',
+                            options=templates,
+                            value='plotly_white'
+                        ),
+                        html.H6('Marker size:'),
+                        dcc.Slider(
+                            id='container-scatter-3d-slider-marker',
+                            min=1, max=10,
+                            step=1,
+                            value=3,
+                            marks={
+                                1: '1',
+                                10: '10'
+                            },
+                            dots=True
+                        ),
                         html.H6('Color by cluster:'),
                         daq.BooleanSwitch(
                             id='container-scatter-3d-switch-color',
@@ -125,9 +157,12 @@ def create_container_scatter_3d():
      State('container-scatter-3d-dropdown-x', 'value'),
      State('container-scatter-3d-dropdown-y', 'value'),
      State('container-scatter-3d-dropdown-z', 'value'),
-     State('container-scatter-3d-switch-color', 'on')]
+     State('container-scatter-3d-switch-color', 'on'),
+     State('container-scatter-3d-slider-marker', 'value'),
+     State('container-scatter-3d-dropdown-theme', 'value')]
 )
-def update_scatter3d(n_clicks, style, x_axis, y_axis, z_axis, color_by_cluster):
+def update_scatter3d(n_clicks, style, x_axis, y_axis, z_axis, color_by_cluster,
+                     marker_size, theme):
     color = get_color(color_by_cluster)
 
     fig = px.scatter_3d(
@@ -136,16 +171,19 @@ def update_scatter3d(n_clicks, style, x_axis, y_axis, z_axis, color_by_cluster):
         y=y_axis,
         z=z_axis,
         color=color,
-        template='plotly',
+        template=theme,
+        range_x=get_range(x_axis),
+        range_y=get_range(y_axis),
+        range_z=get_range(z_axis)
     )
 
     fig.update_traces(
-        marker_size=3
+        marker_size=marker_size
     )
 
     if color == 'cluster':
         fig.update_layout(
-            legend_title_text='ClusterID'
+            legend_title_text='ClusterID',
         )
 
     style['display'] = 'block'
@@ -177,6 +215,24 @@ def create_container_scatter_2d():
                             id='container-scatter-2d-dropdown-y',
                             options=options,
                             value=options[1]['value']
+                        ),
+                        html.H6('Plot theme:'),
+                        dcc.Dropdown(
+                            id='container-scatter-2d-dropdown-theme',
+                            options=templates,
+                            value='plotly_white'
+                        ),
+                        html.H6('Marker size:'),
+                        dcc.Slider(
+                            id='container-scatter-2d-slider-marker',
+                            min=1, max=10,
+                            step=1,
+                            value=3,
+                            marks={
+                                1: '1',
+                                10: '10'
+                            },
+                            dots=True
                         ),
                         html.H6('Color by cluster:'),
                         daq.BooleanSwitch(
@@ -210,9 +266,12 @@ def create_container_scatter_2d():
     [State('container-scatter-2d-graph-1', 'style'),
      State('container-scatter-2d-dropdown-x', 'value'),
      State('container-scatter-2d-dropdown-y', 'value'),
-     State('container-scatter-2d-switch-color', 'on')],
+     State('container-scatter-2d-switch-color', 'on'),
+     State('container-scatter-2d-slider-marker', 'value'),
+     State('container-scatter-2d-dropdown-theme', 'value')],
 )
-def update_scatter2d(n_clicks, style, x_axis, y_axis, color_by_cluster):
+def update_scatter2d(n_clicks, style, x_axis, y_axis, color_by_cluster,
+                     marker_size, theme):
     color = get_color(color_by_cluster)
 
     fig = px.scatter(
@@ -220,11 +279,13 @@ def update_scatter2d(n_clicks, style, x_axis, y_axis, color_by_cluster):
         x=x_axis,
         y=y_axis,
         color=color,
-        template='plotly',
+        template=theme,
+        range_x=get_range(x_axis),
+        range_y=get_range(y_axis)
     )
 
     fig.update_traces(
-        marker_size=3
+        marker_size=marker_size
     )
 
     if color == 'cluster':
@@ -256,6 +317,12 @@ def create_container_hist_1d():
                             options=options,
                             value=options[0]['value']
                         ),
+                        html.H6('Plot theme:'),
+                        dcc.Dropdown(
+                            id='container-hist-1d-dropdown-theme',
+                            options=templates,
+                            value='plotly_white'
+                        ),
                         html.H6('Color by cluster:'),
                         daq.BooleanSwitch(
                             id='container-hist-1d-switch-color',
@@ -286,9 +353,10 @@ def create_container_hist_1d():
      Output('container-hist-1d-text', 'children')],
     Input('container-hist-1d-card-1-button-update', 'n_clicks'),
     [State('container-hist-1d-graph-1', 'style'), State('container-hist-1d-dropdown-x', 'value'),
-     State('container-hist-1d-switch-color', 'on')],
+     State('container-hist-1d-switch-color', 'on'),
+     State('container-hist-1d-dropdown-theme', 'value')],
 )
-def update_hist1d(n_clicks, style, x_axis, color_by_cluster):
+def update_hist1d(n_clicks, style, x_axis, color_by_cluster, theme):
     color = get_color(color_by_cluster)
 
     fig = px.histogram(
@@ -297,8 +365,9 @@ def update_hist1d(n_clicks, style, x_axis, color_by_cluster):
         color=color,
         marginal='rug',
         opacity=0.7,
-        template='plotly',
+        template=theme,
         barmode='overlay',
+        range_x=get_range(x_axis)
     )
 
     if color == 'cluster':
@@ -333,7 +402,7 @@ def parse_args():
 
 
 def main():
-    global df, clustering_result_file, projection_result_file
+    global df, df_mins, df_maxs, clustering_result_file, projection_result_file
 
     args = parse_args()
 
@@ -362,6 +431,9 @@ def main():
     if 'cluster' in df.columns:
         df.sort_values(by='cluster', axis=0, inplace=True)
         df['cluster'] = df['cluster'].apply(lambda x: f'cluster_{x}')
+
+    df_mins = df.min()
+    df_maxs = df.max()
 
     n_samples, n_dims = df.drop('cluster', axis=1, errors='ignore').shape
 
