@@ -1,10 +1,6 @@
 import argparse
-import logging
 import sys
 import os
-
-
-logger = logging.getLogger(__name__)
 
 
 def add_general_arguments(parser):
@@ -161,7 +157,7 @@ def parse_args():
     add_gmeans_parser(subparsers)
 
     args = parser.parse_args()
-    logger.info('##### Command #####\n\t' + ' '.join(sys.argv))
+    print('##### Command #####\n\t' + ' '.join(sys.argv))
     args_print_str = '##### Input parameters #####\n'
     for opt, val in vars(args).items():
         args_print_str += '\t{} : {}\n'.format(opt, val)

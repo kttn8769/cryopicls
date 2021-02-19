@@ -136,11 +136,7 @@ def update_scatter3d(n_clicks, style, x_axis, y_axis, z_axis, color_by_cluster):
         y=y_axis,
         z=z_axis,
         color=color,
-        # labels={'cluster': 'cluster'},
-        # opacity=0.7,
         template='plotly',
-        # symbol='cluster',
-        # text='cluster'
     )
 
     fig.update_traces(
@@ -224,11 +220,7 @@ def update_scatter2d(n_clicks, style, x_axis, y_axis, color_by_cluster):
         x=x_axis,
         y=y_axis,
         color=color,
-        # labels={'cluster': 'cluster'},
-        # opacity=0.7,
         template='plotly',
-        # symbol='cluster',
-        # text='cluster'
     )
 
     fig.update_traces(
@@ -304,13 +296,9 @@ def update_hist1d(n_clicks, style, x_axis, color_by_cluster):
         x=x_axis,
         color=color,
         marginal='rug',
-        # labels={'cluster': 'cluster'},
         opacity=0.7,
         template='plotly',
-        # barmode='relative',
         barmode='overlay',
-        # symbol='cluster',
-        # text='cluster'
     )
 
     if color == 'cluster':
@@ -348,8 +336,6 @@ def main():
     global df, clustering_result_file, projection_result_file
 
     args = parse_args()
-    # app.run_server(debug=args.debug, port=args.port)
-    # app.layout = container1
 
     df_clustering = pd.DataFrame()
     df_projection = pd.DataFrame()
@@ -388,7 +374,7 @@ def main():
     elif args.hist1d:
         app.layout = create_container_hist_1d()
 
-    app.run_server(debug=True, port=args.port)
+    app.run_server(debug=args.debug, port=args.port)
 
 
 if __name__ == "__main__":

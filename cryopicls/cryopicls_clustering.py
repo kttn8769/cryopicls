@@ -2,21 +2,12 @@
 
 import sys
 import os
-import logging
 import pickle
 
 import numpy as np
 import pandas as pd
 
 import cryopicls
-
-logging_fmt = logging.Formatter(
-    '\n[%(asctime)s - %(name)s - %(levelname)s] %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(logging_fmt)
-logger.addHandler(stream_handler)
 
 
 def main():
