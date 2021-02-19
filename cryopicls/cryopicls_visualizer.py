@@ -394,9 +394,12 @@ def parse_args():
     parser.add_argument('--scatter2d', action='store_true', help='2D scatter plot.')
     parser.add_argument('--scatter3d', action='store_true', help='3D scatter plot.')
     parser.add_argument('--hist1d', action='store_true', help='1D histogram plot.')
+    parser.add_argument('--stride', type=int, default=1, help='Only use one in every --stride number of samples, to reduce computational load for a large dataset.')
+
     args = parser.parse_args()
 
     assert args.scatter2d + args.scatter3d + args.hist1d == 1, 'Must specify either one of --scatter2d, --scatter3d, --hist1d.'
+    assert args.stride > 0, '--stride must be a positive integer number.'
 
     return args
 
@@ -427,6 +430,9 @@ def main():
         df = df_clustering
     else:
         df = df_projection
+
+    if args.stride > 1:
+        df = df[::args.stride]
 
     if 'cluster' in df.columns:
         df.sort_values(by='cluster', axis=0, inplace=True)
