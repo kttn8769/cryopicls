@@ -25,15 +25,17 @@ def main():
                               metric=args.metric,
                               min_dist=args.min_dist,
                               random_state=args.random_state)
+        axis_label = 'umap'
     elif args.algorithm == 'pca':
         projector = sklearn.decomposition.PCA(n_components=args.n_components,
                                               random_state=args.random_state)
+        axis_label = 'pc'
 
     # Projection
     Z_proj = projector.fit_transform(Z)
 
     # Save result
-    col_names = [f'dim_{x}' for x in range(Z_proj.shape[1])]
+    col_names = [f'{axis_label}_{x}' for x in range(1, Z_proj.shape[1] + 1)]
     df = pd.DataFrame(data=Z_proj, columns=col_names)
     os.makedirs(args.output_dir, exist_ok=True)
     df.to_pickle(
