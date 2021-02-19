@@ -104,12 +104,11 @@ def main():
             Z_cluster)
 
     # Save Z and cluster_labels as dataframe
-    col_names = [f'dim_{x}' for x in range(Z.shape[1])]
+    col_names = [f'dim_{x}' for x in range(1, Z.shape[1] + 1)]
     df = pd.concat([
         pd.DataFrame(data=Z, columns=col_names),
         pd.Series(data=cluster_labels, name='cluster')
-    ],
-                   axis=1)
+    ], axis=1)
     df.to_pickle(
         os.path.join(args.output_dir,
                      f'{args.output_file_rootname}_dataframe.pkl'))
