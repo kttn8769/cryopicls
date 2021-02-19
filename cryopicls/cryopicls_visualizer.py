@@ -2,8 +2,9 @@
 
 import os
 import argparse
-import pandas as pd
 
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import dash
 import dash_bootstrap_components as dbc
@@ -11,6 +12,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
+from dash_table import DataTable
+
 
 templates = [
     {'label': x, 'value': x}
@@ -19,6 +22,11 @@ templates = [
      'presentation', 'xgridoff', 'ygridoff', 'gridon', 'none']]
 
 df = pd.DataFrame()
+datatable_data = dict()
+datatable_columns = [
+    dict(id='datatable_groups', name='Groups'),
+    dict(id='datatable_num_samples', name='Num Samples', type='numeric')
+]
 df_mins = pd.Series(dtype='float64')
 df_maxs = pd.Series(dtype='float64')
 clustering_result_file = None
@@ -64,6 +72,26 @@ def get_range(axis, margin=0.5):
     vmin = df_mins[axis] - margin
     vmax = df_maxs[axis] + margin
     return [vmin, vmax]
+
+
+def create_datatable_data(df_in):
+    groups = []
+    num_samples = []
+    if 'cluster' in df_in.columns:
+        cluster_ids, cluster_num_samples = np.unique(df_in['cluster'], return_counts=True)
+        cluster_ids = [f'cluter_{x}' for x in cluster_ids]
+        cluster_num_samples = list(cluster_num_samples)
+        groups += cluster_ids
+        num_samples += cluster_num_samples
+    groups.append('Total')
+    num_samples.append(df_in.shape[0])
+
+    data = [
+        {'datatable_groups': x, 'datatable_num_samples': y}
+        for x, y in zip(groups, num_samples)
+    ]
+
+    return data
 
 
 def get_file_info():
@@ -136,6 +164,16 @@ def create_container_scatter_3d():
                         )
                     ])
                 ], id='container-scatter-3d-card-1', className='mt-3'),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5('Data statistics', className='card-title'),
+                        DataTable(
+                            columns=datatable_columns,
+                            data=datatable_data,
+                            cell_selectable=False
+                        )
+                    ])
+                ], id='container-scatter-3d-card-2', className='mt-3')
             ], width={'size': 4}, style={'min-height': '100vh', 'background-color': '#f5f5f5'}),
 
             dbc.Col([
@@ -245,7 +283,17 @@ def create_container_scatter_2d():
                             outline=True, color='primary', n_clicks=0
                         )
                     ])
-                ], id='container-scatter-2d-card-1', className='mt-3')
+                ], id='container-scatter-2d-card-1', className='mt-3'),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5('Data statistics', className='card-title'),
+                        DataTable(
+                            columns=datatable_columns,
+                            data=datatable_data,
+                            cell_selectable=False
+                        )
+                    ])
+                ], id='container-scatter-2d-card-2', className='mt-3')
             ], width={'size': 4}, style={'min-height': '100vh', 'background-color': '#f5f5f5'}),
 
             dbc.Col([
@@ -334,7 +382,17 @@ def create_container_hist_1d():
                             outline=True, color='primary', n_clicks=0
                         )
                     ])
-                ], id='container-hist-1d-card-1', className='mt-3')
+                ], id='container-hist-1d-card-1', className='mt-3'),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5('Data statistics', className='card-title'),
+                        DataTable(
+                            columns=datatable_columns,
+                            data=datatable_data,
+                            cell_selectable=False
+                        )
+                    ])
+                ], id='container-hist-1d-card-2', className='mt-3')
             ], width={'size': 4}, style={'min-height': '100vh', 'background-color': '#f5f5f5'}),
 
             dbc.Col([
@@ -405,7 +463,7 @@ def parse_args():
 
 
 def main():
-    global df, df_mins, df_maxs, clustering_result_file, projection_result_file
+    global df, datatable_data, df_mins, df_maxs, clustering_result_file, projection_result_file
 
     args = parse_args()
 
@@ -430,6 +488,8 @@ def main():
         df = df_clustering
     else:
         df = df_projection
+
+    datatable_data = create_datatable_data(df)
 
     if args.stride > 1:
         df = df[::args.stride]
