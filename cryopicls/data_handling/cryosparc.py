@@ -8,6 +8,58 @@ import yaml
 import numpy as np
 
 
+def load_cs(cs_file):
+    return np.load(cs_file)
+
+
+def save_cs(cs_file, cs):
+    np.save(cs_file, cs)
+    # np.save automatically add .npy extension, thus remove it
+    os.rename(cs_file + '.npy', cs_file)
+
+
+def load_csg(csg_file):
+    with open(csg_file, 'r') as f:
+        csg = yaml.load(f, Loader=yaml.FullLoader)
+    return csg
+
+
+def save_csg(csg_file, csg):
+    with open(csg_file, 'w') as f:
+        yaml.dump(csg, stream=f)
+
+
+def get_metafiles_from_csg(csg_file):
+    # Assumes the same directory as csg file
+    dirpath = os.path.dirname(csg_file)
+
+    csg = load_csg(csg_file)
+
+    metafiles = []
+    for key in csg['results'].keys():
+        metafiles.append(csg['results'][key]['metafile'].replace('>', ''))
+    metafiles = np.unique(metafiles)
+
+    cs_file = None
+    passthrough_file = None
+    for metafile in metafiles:
+        if 'passthrough_particles.cs' in metafile:
+            if passthrough_file is not None and passthrough_file != metafile:
+                sys.exit('More than two king of passthrough_particles.cs files found.')
+            passthrough_file = os.path.join(dirpath, metafile)
+        elif 'particles.cs' in metafile:
+            if cs_file is not None and cs_file != metafile:
+                sys.exit('More than two kind of particles.cs files found.')
+            cs_file = os.path.join(dirpath, metafile)
+        else:
+            sys.exit('Unknown metafile found.')
+
+    assert cs_file is not None
+    # Some times there is no passthrough file.
+
+    return cs_file, passthrough_file
+
+
 def find_cryosparc_files(dir):
     """Find required cryoSPARC files from a job directory
 
@@ -94,39 +146,24 @@ class CryoSPARCMetaData:
 
     passthrough : ndarray
         Array containing cryoSPARC passthrough_particles .cs file contents (loaded by np.load)
-
-    csfile : string
-        Particles .cs file name
-
-    csgfile : string
-        Particles group .csg file name
-
-    passthroughfile : string
-        Particles passthrough .cs file name
     """
 
-    def __init__(self, cs, csg_template, passthrough, csfile=None, csgfile=None, passthroughfile=None):
+    def __init__(self, csg, cs, passthrough=None):
         self.cs = cs
-        self.csg_template = csg_template
+        self.csg = csg
         self.passthrough = passthrough
-        self.csfile = csfile
-        self.csgfile = csgfile
-        self.passthroughfile = passthroughfile
+
+        if self.passthrough is not None:
+            assert self.cs.shape[0] == self.passthrough.shape[0]
 
     @classmethod
-    def load(cls, csfile, csgfile, passthroughfile):
-        """Load cryoSPARC metadata from files.
+    def load(cls, csg_file):
+        """Load cryoSPARC metadata from .csg file.
 
         Parameters
         ----------
-        csfile : string
-            particles .cs file.
-
         csgfile : string
             particles .csg file.
-
-        passthroughfile : string
-            passthrough_particles .cs file.
 
         Returns
         -------
@@ -134,11 +171,17 @@ class CryoSPARCMetaData:
             CryoSparcMetaData class instance.
         """
 
-        cs = np.load(csfile)
-        with open(csgfile, 'r') as f:
-            csg_template = yaml.load(f, Loader=yaml.FullLoader)
-        passthrough = np.load(passthroughfile)
-        return cls(cs, csg_template, passthrough, csfile, csgfile, passthroughfile)
+        csg = load_csg(csg_file)
+
+        cs_file, passthrough_file = get_metafiles_from_csg(csg_file)
+
+        cs = load_cs(cs_file)
+        if passthrough_file:
+            passthrough = load_cs(passthrough_file)
+        else:
+            passthrough = None
+
+        return cls(csg, cs, passthrough)
 
     def write(self, outdir, outfile_rootname):
         """Save metadata in files.
@@ -153,53 +196,50 @@ class CryoSPARCMetaData:
         """
 
         os.makedirs(outdir, exist_ok=True)
-        csfile = os.path.join(outdir, outfile_rootname + '_particles.cs')
-        passthroughfile = os.path.join(outdir, outfile_rootname + '_passthrough_particles.cs')
-        csgfile = os.path.join(outdir, outfile_rootname + '_particles.csg')
 
-        np.save(csfile, self.cs)
-        # np.save forces .npy extension...
-        os.rename(csfile + '.npy', csfile)
-        np.save(passthroughfile, self.passthrough)
-        os.rename(passthroughfile + '.npy', passthroughfile)
-        csg = self._create_csg(csfile, passthroughfile)
-        with open(csgfile, 'w') as f:
-            yaml.dump(csg, stream=f)
+        cs_file = os.path.join(outdir, outfile_rootname + '_particles.cs')
+        save_cs(cs_file, self.cs)
 
-    def _create_csg(self, csfile, passthroughfile):
-        """Create cs group file content from csg_template.
+        if self.passthrough is not None:
+            passthrough_file = os.path.join(outdir, outfile_rootname + '_passthrough_particles.cs')
+            save_cs(passthrough_file, self.passthrough)
+        else:
+            passthrough_file = None
+
+        csg_file = os.path.join(outdir, outfile_rootname + '_particles.csg')
+        self._update_csg(cs_file, passthrough_file)
+        save_csg(csg_file, self.csg)
+
+    def _update_csg(self, cs_file, passthrough_file=None):
+        """Update cs group file content.
 
         Parameters
         ----------
-        csfile : string
-            Filename of particles .cs file.
+        cs_file : string
+            Filename of new particles .cs file. (Directory path not required.)
 
-        passthroughfile : string
-            Filename of passthrough_particles .cs file.
-
-        Returns
-        -------
-        dict
-            Dictionary containing cs group file contents. Save this with yaml.dump as .csg file, then it will be a valid cs group file.
+        passthrough_file : string
+            Filename of new passthrough_particles .cs file. (Directory path not required.)
         """
 
-        csg = copy.deepcopy(self.csg_template)
-        csg['created'] = datetime.datetime.now()
-        csg['group']['description'] = 'Created by cryoPICLS. cryopcls.data_handling.cryosparc.CryoSPARCMetaData._create_csg()'
+        self.csg['created'] = datetime.datetime.now()
+        self.csg['group']['description'] = 'Created by cryoPICLS. cryopcls.data_handling.cryosparc.CryoSPARCMetaData._update_csg()'
 
         num_items = self.cs.shape[0]
-        cs_basename = os.path.basename(csfile)
-        passthrough_basename = os.path.basename(passthroughfile)
-        for key in csg['results'].keys():
-            if 'passthrough_particles.cs' in csg['results'][key]['metafile']:
-                csg['results'][key]['metafile'] = '>' + passthrough_basename
-            elif 'particles.cs' in csg['results'][key]['metafile']:
-                csg['results'][key]['metafile'] = '>' + cs_basename
+        cs_basename = os.path.basename(cs_file)
+        if passthrough_file:
+            passthrough_basename = os.path.basename(passthrough_file)
+
+        for key in self.csg['results'].keys():
+            if 'passthrough_particles.cs' in self.csg['results'][key]['metafile']:
+                assert passthrough_file is not None
+                self.csg['results'][key]['metafile'] = '>' + passthrough_basename
+            elif 'particles.cs' in self.csg['results'][key]['metafile']:
+                self.csg['results'][key]['metafile'] = '>' + cs_basename
             else:
-                sys.exit(f'Unknown metafile name in {key}: {csg["results"][key]["metafile"]}')
-            if 'num_items' in csg['results'][key].keys():
-                csg['results'][key]['num_items'] = num_items
-        return csg
+                sys.exit(f'Unknown metafile name in {key}: {self.csg["results"][key]["metafile"]}')
+            if 'num_items' in self.csg['results'][key].keys():
+                self.csg['results'][key]['num_items'] = num_items
 
     def iloc(self, idxs):
         """Fancy indexing.
@@ -216,5 +256,8 @@ class CryoSPARCMetaData:
         """
 
         cs = self.cs[idxs]
-        passthrough = self.passthrough[idxs]
-        return self.__class__(cs, self.csg_template, passthrough)
+        if self.passthrough is not None:
+            passthrough = self.passthrough[idxs]
+        else:
+            passthrough = None
+        return self.__class__(self.csg, cs, passthrough)

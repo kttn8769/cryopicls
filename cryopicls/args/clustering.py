@@ -15,10 +15,10 @@ def add_general_arguments(parser):
         '--z-file', type=str, help='Required for --cryodrgn. The pickled file containing the learned latent representation data (z.pkl).'
     )
     group.add_argument(
-        '--metadata', type=str, help='Required for --cryodrgn. If a RELION refinement was the input for cryoDRGN, specify the star file here. Else if a cryoSPARC refinement was the input for cryoDRGN, specify the job directory here.'
+        '--metadata', type=str, help='Required for --cryodrgn. If a RELION refinement was the input for cryoDRGN, specify the star file here. Else if a cryoSPARC refinement was the input for cryoDRGN, specify the .csg result group file here (e.g. <PJ>_<JOB>_particles.csg)'
     )
     group.add_argument(
-        '--threedvar-dir', help='Required for --cryosparc. The 3D variability job directory.'
+        '--threedvar-csg', help='Required for --cryosparc. The 3D variability job .csg result group file. (e.g. <PJ>_<JOB>_particles.csg)'
     )
     group.add_argument(
         '--threedvar-num-components', default=-1, type=int, help='Option for --cryosparc. How many variability components to use. For example, "--3dvar-num-components 3" uses the component 0, 1 and 2 for cluster analysis. By default use all the components.'
@@ -173,8 +173,8 @@ def parse_args():
         assert os.path.exists(args.metadata), f'--metadata {args.metadata} not found.'
 
     elif args.cryosparc:
-        assert args.threedvar_dir is not None, 'Must specify --threedvar_dir'
-        assert os.path.isdir(args.threedvar_dir), f'--threedvar-dir {args.threedvar_dir} is not a directory or does not exist.'
+        assert args.threedvar_csg is not None, 'Must specify --threedvar_csg'
+        assert os.path.exists(args.threedvar_csg), f'--threedvar-csg {args.threedvar_csg} not found.'
 
     if args.output_dir is None:
         # Defaults to the current directory

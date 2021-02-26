@@ -16,32 +16,28 @@ def main():
     # Load particle metadata
     if args.cryodrgn:
         # Input is cryoDRGN result
-        if os.path.isdir(args.metadata):
-            # Assuming metadata is cryoSPARC refinement job directory
-            cs_file, csg_file, passthrough_file = \
-                cryopicls.data_handling.cryosparc.find_cryosparc_files(args.metadata)
+        if os.path.splitext(args.metadata)[1] == '.csg':
             md = cryopicls.data_handling.cryosparc.CryoSPARCMetaData.load(
-                cs_file, csg_file, passthrough_file)
+                args.metadata)
         elif os.path.splitext(args.metadata)[1] == '.star':
             md = cryopicls.data_handling.relion.RelionMetaData.load(
                 args.metadata)
         else:
             sys.exit(
-                f'--metadata {args.metadata} is neither a cryoSPARC job directory nor a RELION star file!'
+                f'--metadata {args.metadata} is neither a cryoSPARC group file nor a RELION star file!'
             )
     elif args.cryosparc:
         # Input is cryoSPARC 3D variability job
-        cs_file, csg_file, passthrough_file = \
-            cryopicls.data_handling.cryosparc.find_cryosparc_files(args.threedvar_dir)
         md = cryopicls.data_handling.cryosparc.CryoSPARCMetaData.load(
-            cs_file, csg_file, passthrough_file)
+            args.threedvar_csg)
 
     # Load latent representations, Z
     if args.cryodrgn:
         Z = cryopicls.data_handling.cryodrgn.load_latent_variables(args.z_file)
     elif args.cryosparc:
+        cs_file, _ = cryopicls.data_handling.cryosparc.get_metafiles_from_csg(args.threedvar_csg)
         Z = cryopicls.data_handling.cryosparc.load_latent_variables(
-            md.csfile, args.threedvar_num_components)
+            cs_file, args.threedvar_num_components)
 
     # Initialize clustering model
     if args.algorithm == 'auto-gmm':
@@ -59,7 +55,8 @@ def main():
     # Save metadatas and model
     os.makedirs(args.output_dir, exist_ok=True)
     # The best model
-    with open(os.path.join(args.output_dir, f'{args.output_file_rootname}_model.pkl'), 'wb') as f:
+    with open(os.path.join(args.output_dir,
+              f'{args.output_file_rootname}_model.pkl'), 'wb') as f:
         pickle.dump(fitted_model, f, protocol=4)
     # Cluster centers
     np.savetxt(

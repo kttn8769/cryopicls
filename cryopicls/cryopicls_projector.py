@@ -14,12 +14,12 @@ def main():
     if args.cryodrgn:
         Z = cryopicls.data_handling.cryodrgn.load_latent_variables(args.z_file)
     elif args.cryosparc:
-        cs_file, _, _ = cryopicls.data_handling.cryosparc.find_cryosparc_files(
-            args.threedvar_dir)
+        cs_file, _ = cryopicls.data_handling.cryosparc.get_metafiles_from_csg(args.threedvar_csg)
         Z = cryopicls.data_handling.cryosparc.load_latent_variables(cs_file)
 
     # Initialize projector
     if args.algorithm == 'umap':
+        assert Z.shape[1] > args.n_components
         projector = umap.UMAP(n_neighbors=args.n_neighbors,
                               n_components=args.n_components,
                               metric=args.metric,
@@ -27,6 +27,7 @@ def main():
                               random_state=args.random_state)
         axis_label = 'umap'
     elif args.algorithm == 'pca':
+        assert args.n_components is None or Z.shape[1] > args.n_components
         projector = sklearn.decomposition.PCA(n_components=args.n_components,
                                               random_state=args.random_state)
         axis_label = 'pc'
