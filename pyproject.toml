@@ -37,6 +37,7 @@ ipykernel = "^5.4.3"
 cryopicls_clustering = "cryopicls.cryopicls_clustering:main"
 cryopicls_projector = "cryopicls.cryopicls_projector:main"
 cryopicls_visualizer = "cryopicls.cryopicls_visualizer:main"
+cryopicls_autorefine_cryosparc = "cryopicls.cryopicls_autorefine_cryosparc:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
