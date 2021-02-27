@@ -1,0 +1,76 @@
+created: 2021-01-20 07:09:22.053311
+group:
+  description: All particles that were processed, including alignments
+  name: particles
+  title: All particles
+  type: particle
+results:
+  alignments2D:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.alignments2D
+  alignments3D:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.alignments3D
+  blob:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.blob
+  components_mode_0:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_1:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_2:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_3:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_4:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_5:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_6:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_7:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_8:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  components_mode_9:
+    metafile: '>cryosparc_P2_J809_particles.cs'
+    num_items: 41356
+    type: particle.components
+  ctf:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.ctf
+  location:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.location
+  pick_stats:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.pick_stats
+  sym_expand:
+    metafile: '>P2_J809_passthrough_particles.cs'
+    num_items: 41356
+    type: particle.sym_expand
+version: v2.15.0
