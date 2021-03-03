@@ -1,4 +1,4 @@
 # cryoPICLS:snowflake::cucumber:
-[![build](https://github.com/kttn8769/cryopicls-devel/actions/workflows/test.yml/badge.svg)](https://github.com/kttn8769/cryopicls-devel/actions)
+[![build](https://github.com/yasunaga-lab/cryopicls-devel/actions/workflows/test.yml/badge.svg)](https://github.com/yasunaga-lab/cryopicls-devel/actions)
 
 Cryo-EM Particle Image Clustering in the Latent Space
