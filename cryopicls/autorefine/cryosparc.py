@@ -2,6 +2,7 @@ import subprocess
 import os
 import time
 import shutil
+import re
 
 import cryopicls
 
@@ -73,9 +74,21 @@ class CryoSPARCCom:
 
         return csg_file, cs_file, passthrough_file
 
-    def wait_job_complete(self, project_uid, job_uid):
-        com = f"""cryosparcm cli \\"wait_job_complete('{project_uid}', '{job_uid}')\\" """
-        self.sshcom(com)
+    def wait_job_complete(self, project_uid, job_uid, sleep_time=1, print_msg=True):
+        # wait_job_complete deplecated in v3?? not working..
+        # com = f"""cryosparcm cli \\"wait_job_complete('{project_uid}', '{job_uid}')\\" """
+        # self.sshcom(com)
+        com = f"""cryosparcm cli \\"get_job('{project_uid}', '{job_uid}', 'status')\\" """
+        if print_msg:
+            print(f'Waiting job {project_uid}-{job_uid} for complete...')
+        while True:
+            ret = self.sshcom(com)
+            m = re.match(r".+'status': '([a-z]+)'.*", ret)
+            status = m.group(1)
+            if status == 'completed':
+                break
+            time.sleep(sleep_time)
+        return status
 
     def import_clustering_result_group(self, project_uid, workspace_uid,
                                        csg_file, cache_dir=None, title='',
