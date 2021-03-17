@@ -42,7 +42,8 @@ def main():
             input_group_connects={
                 'particles': f'{job_uid}.particles',
                 'mask': f'{args.csparc_consensus_job_uid}.mask'
-            }
+            },
+            title=csg_file
         )
         csparc_com.enqueue_job(
             args.csparc_project_uid, job_uid, lane=args.csparc_lane
@@ -59,7 +60,8 @@ def main():
             input_group_connects={
                 'particles': f'{job_uid}.particles',
                 'volume': f'{job_uid}.volume'
-            }
+            },
+            title=csg_file
         )
         csparc_com.enqueue_job(
             args.csparc_project_uid, job_uid, lane=args.csparc_lane
