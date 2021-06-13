@@ -17,6 +17,18 @@ def main():
     csg_files = find_result_group_files(
         args.cryopicls_result_dir, args.cryopicls_result_basename)
 
+    # Create workspace (if needed)
+    csparc_com = cryopicls.autorefine.cryosparc.CryoSPARCCom(
+        args.ssh_user, args.ssh_host, args.ssh_port, args.csparc_user_email
+    )
+    if args.csparc_workspace_uid == '':
+        workspace_uid = csparc_com.make_workspace(
+            args.csparc_project_uid,
+            title=args.csparc_workspace_title
+        )
+    else:
+        workspace_uid = args.csparc_workspace_uid
+
     for csg_file in csg_files:
         # Instanciate communicator
         csparc_com = cryopicls.autorefine.cryosparc.CryoSPARCCom(
@@ -26,7 +38,7 @@ def main():
 
         # Import result group
         job_uid = csparc_com.import_clustering_result_group(
-            args.csparc_project_uid, args.csparc_workspace_uid, csg_file,
+            args.csparc_project_uid, workspace_uid, csg_file,
             cache_dir=args.cache_dir, lane=args.csparc_lane,
             title=f'Import of cryoPICLS clustering result : {csg_file}'
         )
@@ -35,7 +47,7 @@ def main():
             # Ab-initio reconstruction
             job_uid = csparc_com.make_job(
                 'homo_abinit',
-                args.csparc_project_uid, args.csparc_workspace_uid,
+                args.csparc_project_uid, workspace_uid,
                 params={
                     'abinit_symmetry': args.csparc_abinitio_symmetry,
                 },
@@ -48,7 +60,7 @@ def main():
             # Reconstruction without refinement (reconstruction only)
             job_uid = csparc_com.make_job(
                 'homo_reconstruct',
-                args.csparc_project_uid, args.csparc_workspace_uid,
+                args.csparc_project_uid, workspace_uid,
                 params={
                     'refine_symmetry': args.csparc_refine_symmetry,
                     'refine_gs_resplit': True
@@ -76,7 +88,7 @@ def main():
             }
         job_uid = csparc_com.make_job(
             'homo_refine_new',
-            args.csparc_project_uid, args.csparc_workspace_uid,
+            args.csparc_project_uid, workspace_uid,
             params={
                 'refine_symmetry': args.csparc_refine_symmetry,
                 'refine_gs_resplit': True

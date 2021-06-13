@@ -36,6 +36,21 @@ class CryoSPARCCom:
         user_id = self.sshcom(com)
         return user_id
 
+    def make_workspace(self, project_uid, title='', desc=''):
+        com = f"""cryosparcm cli \\"create_empty_workspace(project_uid='{project_uid}', created_by_user_id='{self.csparc_user_id}'"""
+
+        if title != '':
+            com += f", title='{title}'"
+        if desc != '':
+            com += f", desc='{desc}'"
+
+        com += ')\\"'
+
+        workspace_uid = self.sshcom(com)
+        time.sleep(self.sleep_time)
+
+        return workspace_uid
+
     def make_job(self, job_type, project_uid, workspace_uid, params=None,
                  input_group_connects=None, title=''):
         if params is None:

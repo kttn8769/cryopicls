@@ -50,8 +50,12 @@ def parse_args():
         help='cryoSPARC project uid. (such as P1, P2, ...)'
     )
     parser.add_argument(
-        '--csparc-workspace-uid', required=True, type=str,
-        help='cryoSPARC workspace uid. (such as W1, W2, ...)'
+        '--csparc-workspace-uid', default='', type=str,
+        help='cryoSPARC workspace uid. (such as W1, W2, ...)  If not specified, a new workspace will be created.'
+    )
+    parser.add_argument(
+        '--csparc-workspace-title', default='', type=str,
+        help='Title for new workspace.'
     )
     parser.add_argument(
         '--csparc-refine-symmetry', default='C1', type=str,
