@@ -512,7 +512,7 @@ def main():
     elif args.hist1d:
         app.layout = create_container_hist_1d()
 
-    app.run_server(debug=args.debug, port=args.port)
+    app.run_server(host="0.0.0.0", debug=args.debug, port=args.port)
 
 
 if __name__ == "__main__":
