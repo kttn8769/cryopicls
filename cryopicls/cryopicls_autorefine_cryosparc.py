@@ -31,25 +31,49 @@ def main():
             title=f'Import of cryoPICLS clustering result : {csg_file}'
         )
 
-        # Reconstruction without refinement (reconstruction only)
-        job_uid = csparc_com.make_job(
-            'homo_reconstruct',
-            args.csparc_project_uid, args.csparc_workspace_uid,
-            params={
-                'refine_symmetry': args.csparc_refine_symmetry,
-                'refine_gs_resplit': True
-            },
-            input_group_connects={
-                'particles': f'{job_uid}.particles',
-                'mask': f'{args.csparc_consensus_job_uid}.mask'
-            },
-            title=csg_file
-        )
+        if args.csparc_abinitio:
+            # Ab-initio reconstruction
+            job_uid = csparc_com.make_job(
+                'homo_abinit',
+                args.csparc_project_uid, args.csparc_workspace_uid,
+                params={
+                    'abinit_symmetry': args.csparc_abinitio_symmetry,
+                },
+                input_group_connects={
+                    'particles': f'{job_uid}.particles'
+                },
+                title=csg_file
+            )
+        else:
+            # Reconstruction without refinement (reconstruction only)
+            job_uid = csparc_com.make_job(
+                'homo_reconstruct',
+                args.csparc_project_uid, args.csparc_workspace_uid,
+                params={
+                    'refine_symmetry': args.csparc_refine_symmetry,
+                    'refine_gs_resplit': True
+                },
+                input_group_connects={
+                    'particles': f'{job_uid}.particles',
+                    'mask': f'{args.csparc_consensus_job_uid}.mask'
+                },
+                title=csg_file
+            )
         csparc_com.enqueue_job(
             args.csparc_project_uid, job_uid, lane=args.csparc_lane
         )
 
         # Refinement
+        if args.csparc_abinitio:
+            input_group_connects = {
+                'particles': f'{job_uid}.particles_class_0',
+                'volume': f'{job_uid}.volume_class_0'
+            }
+        else:
+            input_group_connects = {
+                'particles': f'{job_uid}.particles',
+                'volume': f'{job_uid}.volume'
+            }
         job_uid = csparc_com.make_job(
             'homo_refine_new',
             args.csparc_project_uid, args.csparc_workspace_uid,
@@ -57,10 +81,7 @@ def main():
                 'refine_symmetry': args.csparc_refine_symmetry,
                 'refine_gs_resplit': True
             },
-            input_group_connects={
-                'particles': f'{job_uid}.particles',
-                'volume': f'{job_uid}.volume'
-            },
+            input_group_connects=input_group_connects,
             title=csg_file
         )
         csparc_com.enqueue_job(

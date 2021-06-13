@@ -58,6 +58,14 @@ def parse_args():
         help='Point group symmetry of reconstruction and refinement.'
     )
     parser.add_argument(
+        '--csparc-abinitio', action='store_true',
+        help='Do ab-initio reconstruction instead of reconstruction only.'
+    )
+    parser.add_argument(
+        '--csparc-abinitio-symmetry', default='C1', type=str,
+        help='Point group symmetry of ab-initio reconstruction.'
+    )
+    parser.add_argument(
         '--csparc-consensus-job-uid', required=True, type=str,
         help='cryoSPARC job uid (such as J1, J2, ...) of the consensus reconstruction job.'
     )
