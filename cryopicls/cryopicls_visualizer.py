@@ -14,6 +14,8 @@ import dash_daq as daq
 from dash.dependencies import Input, Output, State
 from dash_table import DataTable
 
+import cryopicls
+
 
 templates = [
     {'label': x, 'value': x}
@@ -31,6 +33,8 @@ df_mins = pd.Series(dtype='float64')
 df_maxs = pd.Series(dtype='float64')
 clustering_result_file = None
 projection_result_file = None
+cryodrgn_result_file = None
+threedva_result_file = None
 
 # dash.Dash automatically loads .css files in the assets directory.
 app = dash.Dash(__name__, title="cryoPICLS", suppress_callback_exceptions=True)
@@ -102,6 +106,12 @@ def get_file_info():
     if projection_result_file:
         info.append(html.H6('Projection result:', style={'font-weight': 'bold'}, className='mt-2'))
         info.append(html.Div(projection_result_file, className='ml-4'))
+    if cryodrgn_result_file:
+        info.append(html.H6('cryoDRGN result:', style={'font-weight': 'bold'}, className='mt-2'))
+        info.append(html.Div(cryodrgn_result_file, className='ml-4'))
+    if threedva_result_file:
+        info.append(html.H6('3DVA result:', style={'font-weight': 'bold'}, className='mt-2'))
+        info.append(html.Div(threedva_result_file, className='ml-4'))
     return info
 
 
@@ -440,6 +450,29 @@ def update_hist1d(n_clicks, style, x_axis, color_by_cluster, theme):
     return fig, style, text
 
 
+def array_to_df(Z):
+    col_names = [f'dim_{x}' for x in range(1, Z.shape[1] + 1)]
+    df = pd.DataFrame(data=Z, columns=col_names)
+    return df
+
+
+def load_latent_variables_cryodrgn(cryodrgn_z_file):
+    Z = cryopicls.data_handling.cryodrgn.load_latent_variables(cryodrgn_z_file)
+    df = array_to_df(Z)
+    return df
+
+
+def load_latent_variables_threedva(threedva_csg_file):
+    cs_file, _ = cryopicls.data_handling.cryosparc.get_metafiles_from_csg(
+        threedva_csg_file
+    )
+    Z = cryopicls.data_handling.cryosparc.load_latent_variables(
+        cs_file
+    )
+    df = array_to_df(Z)
+    return df
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -449,6 +482,10 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help='Run app in debug mode.')
     parser.add_argument('--clustering-result', type=str, help='Clustering result file of cryoPICLS.')
     parser.add_argument('--projection-result', type=str, help='Projection result file of cryoPICLS.')
+    parser.add_argument('--visualize-cryodrgn', action='store_true', help='Directly visualize cryoDRGN result.')
+    parser.add_argument('--visualize-threedva', action='store_true', help='Directly visualize cryoSPARC 3DVA result.')
+    parser.add_argument('--cryodrgn-z-file', type=str, help='Required for --visualize-cryodrgn. The pickled file containing the learned latent representation data (default z.pkl).')
+    parser.add_argument('--threedva-csg-file', type=str, help='Required for --visualize-threedva. The 3D variability job .csg result group file. (e.g. <PJ>_<JOB>_particles.csg')
     parser.add_argument('--scatter2d', action='store_true', help='2D scatter plot.')
     parser.add_argument('--scatter3d', action='store_true', help='3D scatter plot.')
     parser.add_argument('--hist1d', action='store_true', help='1D histogram plot.')
@@ -463,7 +500,7 @@ def parse_args():
 
 
 def main():
-    global df, datatable_data, df_mins, df_maxs, clustering_result_file, projection_result_file
+    global df, datatable_data, df_mins, df_maxs, clustering_result_file, projection_result_file, cryodrgn_result_file, threedva_result_file
 
     args = parse_args()
 
@@ -486,8 +523,14 @@ def main():
         df = df_projection.join(df_clustering['cluster'])
     elif not df_clustering.empty:
         df = df_clustering
-    else:
+    elif not df_projection.empty:
         df = df_projection
+    elif args.visualize_cryodrgn:
+        df = load_latent_variables_cryodrgn(args.cryodrgn_z_file)
+        cryodrgn_result_file = args.cryodrgn_z_file
+    elif args.visualize_threedva:
+        df = load_latent_variables_threedva(args.threedva_csg_file)
+        threedva_result_file = args.threedva_csg_file
 
     datatable_data = create_datatable_data(df)
 
