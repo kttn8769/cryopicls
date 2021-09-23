@@ -48,6 +48,9 @@ def main():
         model = cryopicls.clustering.kmeans.KMeansClustering(**vars(args))
     elif args.algorithm == 'g-means':
         model = cryopicls.clustering.gmeans.GMeansClustering(**vars(args))
+    elif args.algorithm == 'manual':
+        thresh_list = cryopicls.clustering.manual_select.parse_thresh_args(**vars(args))
+        model = cryopicls.clustering.manual_select.ManualSelector(thresh_list)
 
     # Do clustering
     fitted_model, cluster_labels, cluster_centers = model.fit(Z)
