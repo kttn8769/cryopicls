@@ -144,6 +144,16 @@ def add_gmeans_parser(subparsers):
     )
 
 
+def add_manual_select_parser(subparsers):
+    parser_manual = add_general_arguments(
+        subparsers.add_parser('manual', formatter_class=argparse.ArgumentDefaultsHelpFormatter, help='Manually select data by thresholding. Selected data will be labeled as class 001, and the rest as class 000.')
+    )
+    group_manual = parser_manual.add_argument_group('Manual select parameters')
+    group_manual.add_argument(
+        '--thresh', nargs=3, action='append', help='Specify threshold by 3 values. Format: --thresh <latent dim (0-base)> <min> <max>. This option can be specified multiple times. All the thresholds will be combined with AND.'
+    )
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -155,6 +165,7 @@ def parse_args():
     add_xmeans_parser(subparsers)
     add_kmeans_parser(subparsers)
     add_gmeans_parser(subparsers)
+    add_manual_select_parser(subparsers)
 
     args = parser.parse_args()
     print('##### Command #####\n\t' + ' '.join(sys.argv))
